@@ -1,0 +1,25 @@
+name: Deploy DEV
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+
+jobs:
+  dev:
+    runs-on: ubuntu-latest
+    env:
+      REPOSITORY: restaurant-service
+      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+      AWS_REGION: '${{ secrets.AWS_REGION }}'
+    permissions:
+      id-token: write
+      contents: read
+    environment: dev
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Determine Variable ImageTag
+        run: |
+          echo "ImageTag=$GITHUB_RUN_NUMBER" >> $GITHUB_ENV
