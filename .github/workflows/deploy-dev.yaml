@@ -10,14 +10,16 @@ on:
 env:
   TF_WORKSPACE_NAME: 'restaurant-dev'
   TF_ORGANIZATION: 'Zulupa-Jigori'
+  ENVIRONMENT: ${{ vars.ENVIRONMENT }}
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
   AWS_REGION: ${{ secrets.AWS_REGION }}
   ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
   ECS_SERVICE: ${{ secrets.ECS_SERVICE }}
   ECS_CLUSTER: ${{ secrets.ECS_CLUSTER }}
   ECS_TASK_DEFINITION: task-definition.json
   CONTAINER_NAME: ${{ secrets.CONTAINER_NAME }}
-
 permissions:
+  id-token: write
   contents: read
 
 jobs:
@@ -78,10 +80,12 @@ jobs:
         working-directory: ./infrastructure/dev/terraform
         run: |
           cat ./tf_cloud.tf.tmpl | envsubst > tf_cloud.tf
+          cat tf_cloud.tf
 
       - name: Generate Terraform Variables
         run: |
           cat ./infrastructure/terraform/dev.tfvars.tmpl | envsubst > ./infrastructure/dev/terraform/dev.tfvars
+          cat ./infrastructure/dev/terraform/dev.tfvars
 
       - name: Terraform Init
         working-directory: ./infrastructure/dev/terraform
