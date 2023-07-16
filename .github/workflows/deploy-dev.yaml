@@ -1,0 +1,126 @@
+name: Deploy to DEV
+
+on:
+  push:
+    branches:
+      - develop
+      # TODO: temp value
+      - 'feature/**'
+
+env:
+  TF_WORKSPACE_NAME: 'restaurant-dev'
+  TF_ORGANIZATION: 'Zulupa-Jigori'
+  ENVIRONMENT: ${{ vars.ENVIRONMENT }}
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+  ECS_SERVICE: ${{ secrets.ECS_SERVICE }}
+  ECS_CLUSTER: ${{ secrets.ECS_CLUSTER }}
+  ECS_TASK_DEFINITION: task-definition.json
+  CONTAINER_NAME: ${{ secrets.CONTAINER_NAME }}
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Checkout infrastructure
+        uses: actions/checkout@v3
+        with:
+          repository: Zulupa-Jigori/restaurant-infrastructure
+          token: ${{ secrets.GIT_RESTAURANT_INFRASTRUCTURE_TOKEN }}
+          path: ./infrastructure/dev
+          ref: develop
+
+      - name: Determine Variable ImageTag
+        run: echo "ImageTag=${{ github.sha }}" >> $GITHUB_ENV
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build docker image
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: docker build -t $REGISTRY/$ECR_REPOSITORY:latest -t $REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+
+      - name: Run linter
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: docker run --rm $REGISTRY/$ECR_REPOSITORY:latest npm run lint
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2.0.3
+        with:
+          # TODO: rename to TF
+          cli_config_credentials_token: ${{ secrets.TERRAFORM_API_TOKEN }}
+
+      - name: Terraform Format
+        working-directory: ./infrastructure/dev/terraform
+        run: terraform fmt -check
+        continue-on-error: true
+
+      - name: Generate Terraform Cloud config
+        working-directory: ./infrastructure/dev/terraform
+        run: |
+          cat ./tf_cloud.tf.tmpl | envsubst > tf_cloud.tf
+          cat tf_cloud.tf
+
+      - name: Generate Terraform Variables
+        run: |
+          cat ./infrastructure/terraform/dev.tfvars.tmpl | envsubst > ./infrastructure/dev/terraform/dev.tfvars
+          cat ./infrastructure/dev/terraform/dev.tfvars
+
+      - name: Terraform Init
+        working-directory: ./infrastructure/dev/terraform
+        run: terraform init
+
+      - name: Terraform Validate
+        working-directory: ./infrastructure/dev/terraform
+        run: terraform validate
+
+      - name: Terraform Plan
+        working-directory: ./infrastructure/dev/terraform
+        run: terraform plan -var-file="dev.tfvars"
+
+      - name: Terraform Apply
+        working-directory: ./infrastructure/dev/terraform
+        run: terraform apply -var-file="dev.tfvars" -auto-approve
+
+      - name: Push docker image
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: docker push $REGISTRY/$ECR_REPOSITORY --all-tags
+
+      # TODO: check maybe it will help to check until done
+      # - name: Fill in the new image ID in the Amazon ECS task definition
+      #   id: task-def
+      #   uses: aws-actions/amazon-ecs-render-task-definition@v1
+      #   with:
+      #     task-definition: ${{ env.ECS_TASK_DEFINITION }}
+      #     container-name: ${{ env.CONTAINER_NAME }}
+      #     image: ${{ steps.build-image.outputs.image }}
+
+      # - name: Deploy Amazon ECS task definition
+      #   uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      #   with:
+      #     task-definition: ${{ steps.task-def.outputs.task-definition }}
+      #     service: ${{ env.ECS_SERVICE }}
+      #     cluster: ${{ env.ECS_CLUSTER }}
+      #     wait-for-service-stability: true
