@@ -7,8 +7,8 @@ export class CreateDishDto {
   description: string;
 
   @IsNumber()
-  price: string;
+  price: number;
 
-  @IsNumber()
+  @IsString()
   imageUrl: string;
 }
