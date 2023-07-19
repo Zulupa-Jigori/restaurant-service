@@ -4,25 +4,21 @@ import { Repository } from 'typeorm';
 import { CreateDishDto } from './dto/create-dish.dto';
 import { UpdateDishDto } from './dto/update-dish.dto';
 import { Dish } from './entities/dish.entity';
+
 @Injectable()
 export class DishesService {
   constructor(
     @InjectRepository(Dish) private readonly dishRepository: Repository<Dish>,
   ) {}
 
-  async create({ title, description, price, imageUrl }: CreateDishDto) {
+  async create(createDishDto: CreateDishDto) {
     const isDishExist = await this.dishRepository.findOne({
-      where: { title },
+      where: { title: createDishDto.title },
     });
     if (isDishExist) {
       throw new BadRequestException('This dish is already exist');
     }
-    const dish = await this.dishRepository.save({
-      title,
-      description,
-      price,
-      imageUrl,
-    });
+    const dish = await this.dishRepository.save(createDishDto);
     return dish;
   }
 
@@ -34,25 +30,14 @@ export class DishesService {
     return await this.dishRepository.findOne({ where: { id } });
   }
 
-  async update(
-    id: number,
-    { title, description, price, imageUrl }: UpdateDishDto,
-  ) {
+  async update(id: number, updateDishDto: UpdateDishDto) {
     const isDishExist = await this.dishRepository.findOne({
       where: { id },
     });
     if (!isDishExist) {
       throw new BadRequestException('This dish does not exist');
     }
-    const updatedDish = this.dishRepository.update(
-      { id },
-      {
-        title,
-        description,
-        price,
-        imageUrl,
-      },
-    );
+    const updatedDish = this.dishRepository.update(id, updateDishDto);
     return updatedDish;
   }
 
