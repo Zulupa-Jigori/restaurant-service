@@ -26,12 +26,12 @@ export class DishesService {
     return { dish };
   }
 
-  findAll() {
-    return `This action returns all dishes`;
+  async findAll() {
+    return await this.dishRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} dish`;
+  async findOne(id: number) {
+    return await this.dishRepository.findOne({ where: { id } });
   }
 
   update(id: number, updateDishDto: UpdateDishDto) {
