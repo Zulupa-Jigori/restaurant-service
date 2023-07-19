@@ -10,18 +10,18 @@ export class DishesService {
     @InjectRepository(Dish) private readonly dishRepository: Repository<Dish>,
   ) {}
 
-  async create(createDishDto: CreateDishDto) {
+  async create({ title, description, price, imageUrl }: CreateDishDto) {
     const isDishExist = await this.dishRepository.findOne({
-      where: { title: createDishDto.title },
+      where: { title },
     });
     if (isDishExist) {
       throw new BadRequestException('This dish is already exist');
     }
     const dish = await this.dishRepository.save({
-      title: createDishDto.title,
-      description: createDishDto.description,
-      price: createDishDto.price,
-      imageUrl: createDishDto.imageUrl,
+      title,
+      description,
+      price,
+      imageUrl,
     });
     return dish;
   }
@@ -34,7 +34,10 @@ export class DishesService {
     return await this.dishRepository.findOne({ where: { id } });
   }
 
-  async update(id: number, updateDishDto: UpdateDishDto) {
+  async update(
+    id: number,
+    { title, description, price, imageUrl }: UpdateDishDto,
+  ) {
     const isDishExist = await this.dishRepository.findOne({
       where: { id },
     });
@@ -44,10 +47,10 @@ export class DishesService {
     const updatedDish = this.dishRepository.update(
       { id },
       {
-        title: updateDishDto.title,
-        description: updateDishDto.description,
-        price: updateDishDto.price,
-        imageUrl: updateDishDto.imageUrl,
+        title,
+        description,
+        price,
+        imageUrl,
       },
     );
     return updatedDish;
