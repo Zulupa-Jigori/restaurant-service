@@ -38,7 +38,7 @@ export class DishesService {
     return `This action updates a #${id} dish`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} dish`;
+  async remove(id: number) {
+    return await this.dishRepository.delete({ id });
   }
 }
