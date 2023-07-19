@@ -3,13 +3,13 @@ import { CreateDishDto } from './dto/create-dish.dto';
 import { UpdateDishDto } from './dto/update-dish.dto';
 
 @Injectable()
-export class DishService {
+export class DishesService {
   create(createDishDto: CreateDishDto) {
     return 'This action adds a new dish';
   }
 
   findAll() {
-    return `This action returns all dish`;
+    return `This action returns all dishes`;
   }
 
   findOne(id: number) {
