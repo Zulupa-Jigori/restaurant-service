@@ -23,7 +23,7 @@ export class DishesService {
       price: createDishDto.price,
       imageUrl: createDishDto.imageUrl,
     });
-    return { dish };
+    return dish;
   }
 
   async findAll() {
