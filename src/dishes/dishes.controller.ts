@@ -6,8 +6,6 @@ import {
   Param,
   Patch,
   Post,
-  UsePipes,
-  ValidationPipe,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { DishesService } from './dishes.service';
@@ -21,7 +19,6 @@ export class DishesController {
 
   @Post()
   @ApiOperation({ summary: 'Create dish' })
-  @UsePipes(new ValidationPipe())
   create(@Body() createDishDto: CreateDishDto) {
     return this.dishesService.create(createDishDto);
   }
