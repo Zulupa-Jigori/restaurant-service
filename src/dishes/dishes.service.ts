@@ -18,16 +18,15 @@ export class DishesService {
     if (isDishExist) {
       throw new BadRequestException('This dish is already exist');
     }
-    const dish = await this.dishRepository.save(createDishDto);
-    return dish;
+    return this.dishRepository.save(createDishDto);
   }
 
   async findAll() {
-    return await this.dishRepository.find();
+    return this.dishRepository.find();
   }
 
   async findOne(id: number) {
-    return await this.dishRepository.findOne({ where: { id } });
+    return this.dishRepository.findOne({ where: { id } });
   }
 
   async update(id: number, updateDishDto: UpdateDishDto) {
@@ -37,11 +36,10 @@ export class DishesService {
     if (!isDishExist) {
       throw new BadRequestException('This dish does not exist');
     }
-    const updatedDish = this.dishRepository.update(id, updateDishDto);
-    return updatedDish;
+    return this.dishRepository.update(id, updateDishDto);
   }
 
   async remove(id: number) {
-    return await this.dishRepository.delete({ id });
+    return this.dishRepository.delete({ id });
   }
 }
