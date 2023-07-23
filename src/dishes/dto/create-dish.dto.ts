@@ -1,4 +1,5 @@
-import { IsString, IsNumber } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsString } from 'class-validator';
 export class CreateDishDto {
   @IsString()
   title: string;
@@ -6,9 +7,6 @@ export class CreateDishDto {
   @IsString()
   description: string;
 
-  @IsNumber()
+  @Transform(({ value }) => Number(value))
   price: number;
-
-  @IsString()
-  imageUrl: string;
 }

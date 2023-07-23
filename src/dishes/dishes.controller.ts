@@ -6,7 +6,10 @@ import {
   Param,
   Patch,
   Post,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { DishesService } from './dishes.service';
 import { CreateDishDto } from './dto/create-dish.dto';
@@ -19,8 +22,16 @@ export class DishesController {
 
   @Post()
   @ApiOperation({ summary: 'Create dish' })
-  create(@Body() createDishDto: CreateDishDto) {
-    return this.dishesService.create(createDishDto);
+  @UseInterceptors(FileInterceptor('file'))
+  create(
+    @Body() createDishDto: CreateDishDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.dishesService.create(createDishDto, {
+      buffer: file.buffer,
+      filename: file.originalname,
+      mimetype: file.mimetype,
+    });
   }
 
   @Get()
