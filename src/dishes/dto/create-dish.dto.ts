@@ -1,4 +1,4 @@
-import { IsString, IsNumber } from 'class-validator';
+import { IsNumber, IsString } from 'class-validator';
 export class CreateDishDto {
   @IsString()
   title: string;
@@ -8,7 +8,4 @@ export class CreateDishDto {
 
   @IsNumber()
   price: number;
-
-  @IsString()
-  imageUrl: string;
 }

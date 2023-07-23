@@ -20,9 +20,6 @@ export class Dish {
   @Column()
   price: number;
 
-  @Column()
-  imageUrl: string;
-
   @CreateDateColumn()
   createdAt: Date;
 
