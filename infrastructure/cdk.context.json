@@ -1,0 +1,11 @@
+{
+  "availability-zones:account=951556652541:region=eu-central-1": [
+    "eu-central-1a",
+    "eu-central-1b",
+    "eu-central-1c"
+  ],
+  "hosted-zone:account=951556652541:domainName=zalupa-jigori.click:region=eu-central-1": {
+    "Id": "/hostedzone/Z0888518W8AE4TBUD3F0",
+    "Name": "zalupa-jigori.click."
+  }
+}

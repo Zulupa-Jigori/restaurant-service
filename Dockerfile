@@ -1,4 +1,4 @@
-FROM node:18.16.1-alpine
+FROM --platform=linux/amd64 node:18.16.1-alpine
 
 EXPOSE 8080
 
