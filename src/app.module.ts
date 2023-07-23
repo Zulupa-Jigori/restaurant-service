@@ -18,6 +18,11 @@ import { DishesModule } from './dishes/dishes.module';
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_NAME'),
         entities: [`${__dirname}/**/*.entity{.js, .ts}`],
+        migrations: ['src/migrations/*.js'],
+        migrationsTableName: 'migrations',
+        cli: {
+          migrationsDir: 'src/migrations',
+        },
         autoLoadEntities: true,
         synchronize: true,
       }),
