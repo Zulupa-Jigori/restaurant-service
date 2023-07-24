@@ -1,8 +1,8 @@
 import {
-  Entity,
   Column,
-  PrimaryGeneratedColumn,
   CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
@@ -11,7 +11,7 @@ export class Dish {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ unique: true })
   title: string;
 
   @Column()
@@ -19,9 +19,6 @@ export class Dish {
 
   @Column()
   price: number;
-
-  @Column()
-  imageUrl: string;
 
   @CreateDateColumn()
   createdAt: Date;
