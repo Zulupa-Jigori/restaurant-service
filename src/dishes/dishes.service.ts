@@ -11,35 +11,33 @@ export class DishesService {
     @InjectRepository(Dish) private readonly dishRepository: Repository<Dish>,
   ) {}
 
-  async create(createDishDto: CreateDishDto) {
-    const isDishExist = await this.dishRepository.findOne({
-      where: { title: createDishDto.title },
-    });
-    if (isDishExist) {
-      throw new BadRequestException('This dish is already exist');
-    }
-    return this.dishRepository.save(createDishDto);
+  create(createDishDto: CreateDishDto) {
+    const dish = this.dishRepository.create(createDishDto);
+    return this.dishRepository.save(dish);
   }
 
-  async findAll() {
+  findAll() {
     return this.dishRepository.find();
   }
 
-  async findOne(id: number) {
+  findOne(id: number) {
     return this.dishRepository.findOne({ where: { id } });
   }
 
   async update(id: number, updateDishDto: UpdateDishDto) {
-    const isDishExist = await this.dishRepository.findOne({
-      where: { id },
-    });
-    if (!isDishExist) {
+    const dish = await this.findOne(id);
+    if (!dish) {
       throw new BadRequestException('This dish does not exist');
     }
-    return this.dishRepository.update(id, updateDishDto);
+    Object.assign(dish, updateDishDto);
+    return this.dishRepository.save(dish);
   }
 
   async remove(id: number) {
-    return this.dishRepository.delete({ id });
+    const dish = await this.findOne(id);
+    if (!dish) {
+      throw new BadRequestException('This dish does not exist');
+    }
+    return this.dishRepository.remove(dish);
   }
 }
