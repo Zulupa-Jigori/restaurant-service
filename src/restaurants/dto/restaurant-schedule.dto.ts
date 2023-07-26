@@ -1,6 +1,6 @@
 import { IsMilitaryTime, ValidateNested } from 'class-validator';
 
-class ScheduleTimeFrame {
+class ScheduleTimeFrameDto {
   @IsMilitaryTime()
   startTime: string;
 
@@ -8,10 +8,10 @@ class ScheduleTimeFrame {
   endTime: string;
 }
 
-export class RestaurantSchedule {
+export class RestaurantScheduleDto {
   @ValidateNested()
-  workingDays: ScheduleTimeFrame;
+  workingDays: ScheduleTimeFrameDto;
 
   @ValidateNested()
-  weekends: ScheduleTimeFrame;
+  weekends: ScheduleTimeFrameDto;
 }

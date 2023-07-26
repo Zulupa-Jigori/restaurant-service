@@ -7,7 +7,9 @@ export class RestaurantSchedule {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Restaurant, (restaurant) => restaurant.id)
+  @ManyToOne(() => Restaurant, (restaurant) => restaurant.id, {
+    onDelete: 'CASCADE',
+  })
   restaurant_id: number;
 
   @Column({
