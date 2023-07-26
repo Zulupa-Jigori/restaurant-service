@@ -11,15 +11,9 @@ export class RestaurantsService {
     @InjectRepository(Restaurant)
     private readonly restaurantRepository: Repository<Restaurant>,
   ) {}
-  async create({ name, address, schedule }: CreateRestaurantDto) {
-    console.log('DEBUG:  RestaurantsService  create  schedule:', schedule);
-    const restaurant = this.restaurantRepository.create({
-      name,
-      address,
-      schedule,
-    });
-
-    return await this.restaurantRepository.save(restaurant);
+  create(createRestaurantDto: CreateRestaurantDto) {
+    const item = this.restaurantRepository.create(createRestaurantDto);
+    return this.restaurantRepository.save(item);
   }
 
   findAll() {
@@ -30,19 +24,17 @@ export class RestaurantsService {
     return this.restaurantRepository.findOneBy({ id });
   }
 
-  async update(id: number, { name, address, schedule }: UpdateRestaurantDto) {
-    const restaurant = await this.restaurantRepository.preload({
+  async update(id: number, updateRestaurantDto: UpdateRestaurantDto) {
+    const item = await this.restaurantRepository.preload({
       id,
-      name,
-      address,
-      schedule,
+      ...updateRestaurantDto,
     });
 
-    if (!restaurant) {
+    if (!item) {
       throw new NotFoundException();
     }
 
-    return await this.restaurantRepository.save(restaurant);
+    return this.restaurantRepository.save(item);
   }
 
   async remove(id: number) {
