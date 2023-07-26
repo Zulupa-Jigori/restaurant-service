@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateDishDto } from './dto/create-dish.dto';
@@ -27,7 +27,7 @@ export class DishesService {
   async update(id: number, updateDishDto: UpdateDishDto) {
     const dish = await this.findOne(id);
     if (!dish) {
-      throw new BadRequestException('This dish does not exist');
+      throw new NotFoundException('This dish does not exist');
     }
     Object.assign(dish, updateDishDto);
     return this.dishRepository.save(dish);
@@ -36,7 +36,7 @@ export class DishesService {
   async remove(id: number) {
     const dish = await this.findOne(id);
     if (!dish) {
-      throw new BadRequestException('This dish does not exist');
+      throw new NotFoundException('This dish does not exist');
     }
     return this.dishRepository.remove(dish);
   }
