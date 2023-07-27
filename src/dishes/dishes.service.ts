@@ -1,3 +1,8 @@
+import {
+  DeleteObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -6,8 +11,6 @@ import { v4 as uuid } from 'uuid';
 import { CreateDishDto } from './dto/create-dish.dto';
 import { UpdateDishDto } from './dto/update-dish.dto';
 import { Dish } from './entities/dish.entity';
-
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { FileUpload } from './interfaces/file-upload.interface';
 
 const client = new S3Client({});
@@ -18,19 +21,19 @@ export class DishesService {
     private readonly configService: ConfigService,
     @InjectRepository(Dish) private readonly dishRepository: Repository<Dish>,
   ) {}
+  region = this.configService.get('AWS_REGION');
+  bucketName = this.configService.get('AWS_BUCKET_NAME');
 
   async create(createDishDto: CreateDishDto, fileUpload: FileUpload) {
-    const isDishExist = await this.dishRepository.findOne({
+    const dish = await this.dishRepository.findOne({
       where: { title: createDishDto.title },
     });
-    if (isDishExist) {
+    if (dish) {
       throw new BadRequestException('This dish is already exist');
     }
 
-    const region = this.configService.get('AWS_REGION');
-    const bucketName = this.configService.get('AWS_BUCKET_NAME');
     const command = new PutObjectCommand({
-      Bucket: bucketName,
+      Bucket: this.bucketName,
       Body: fileUpload.buffer,
       Key: `dishes/${uuid()}-${fileUpload.filename}`,
       ContentType: fileUpload.mimetype,
@@ -40,18 +43,18 @@ export class DishesService {
       await client.send(command);
       return this.dishRepository.save({
         ...createDishDto,
-        imageUrl: `https://${bucketName}.s3.${region}.amazonaws.com/${command.input.Key}`,
+        imageUrl: `https://${this.bucketName}.s3.${this.region}.amazonaws.com/${command.input.Key}`,
       });
     } catch (err) {
       console.error(err);
     }
   }
 
-  async findAll() {
+  findAll() {
     return this.dishRepository.find();
   }
 
-  async findOne(id: number) {
+  findOne(id: number) {
     return this.dishRepository.findOne({ where: { id } });
   }
 
@@ -66,6 +69,13 @@ export class DishesService {
   }
 
   async remove(id: number) {
-    return this.dishRepository.delete({ id });
+    const dish = await this.findOne(id);
+    const fileName = dish.imageUrl.split('dishes/')[1];
+    const command = new DeleteObjectCommand({
+      Bucket: this.bucketName,
+      Key: `dishes/${fileName}`,
+    });
+    client.send(command);
+    return this.dishRepository.remove(dish);
   }
 }
