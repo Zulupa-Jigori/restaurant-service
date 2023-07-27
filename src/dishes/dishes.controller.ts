@@ -2,8 +2,11 @@ import {
   Body,
   Controller,
   Delete,
+  FileTypeValidator,
   Get,
+  MaxFileSizeValidator,
   Param,
+  ParseFilePipe,
   Patch,
   Post,
   UploadedFile,
@@ -22,15 +25,23 @@ export class DishesController {
 
   @Post()
   @ApiOperation({ summary: 'Create dish' })
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('image'))
   create(
     @Body() createDishDto: CreateDishDto,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 500000 }), // 500kb
+          new FileTypeValidator({ fileType: /^image\/(jpg|jpeg|png)$/ }),
+        ],
+      }),
+    )
+    image: Express.Multer.File,
   ) {
     return this.dishesService.create(createDishDto, {
-      buffer: file.buffer,
-      filename: file.originalname,
-      mimetype: file.mimetype,
+      buffer: image.buffer,
+      filename: image.originalname,
+      mimetype: image.mimetype,
     });
   }
 
