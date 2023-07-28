@@ -2,11 +2,8 @@ import {
   Body,
   Controller,
   Delete,
-  FileTypeValidator,
   Get,
-  MaxFileSizeValidator,
   Param,
-  ParseFilePipe,
   Patch,
   Post,
   UploadedFile,
@@ -14,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { uploadImageValidator } from '../common/validators/image.validator';
 import { DishesService } from './dishes.service';
 import { CreateDishDto } from './dto/create-dish.dto';
 import { UpdateDishDto } from './dto/update-dish.dto';
@@ -28,14 +26,7 @@ export class DishesController {
   @UseInterceptors(FileInterceptor('image'))
   create(
     @Body() createDishDto: CreateDishDto,
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({ maxSize: 500000 }), // 500kb
-          new FileTypeValidator({ fileType: /^image\/(jpg|jpeg|png)$/ }),
-        ],
-      }),
-    )
+    @UploadedFile(uploadImageValidator)
     image: Express.Multer.File,
   ) {
     return this.dishesService.create(createDishDto, {
@@ -59,8 +50,18 @@ export class DishesController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update specific dish' })
-  update(@Param('id') id: string, @Body() updateDishDto: UpdateDishDto) {
-    return this.dishesService.update(+id, updateDishDto);
+  @UseInterceptors(FileInterceptor('image'))
+  update(
+    @Param('id') id: string,
+    @Body() updateDishDto: UpdateDishDto,
+    @UploadedFile(uploadImageValidator)
+    image: Express.Multer.File,
+  ) {
+    return this.dishesService.update(+id, updateDishDto, {
+      buffer: image.buffer,
+      filename: image.originalname,
+      mimetype: image.mimetype,
+    });
   }
 
   @Delete(':id')

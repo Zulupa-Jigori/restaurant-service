@@ -58,14 +58,42 @@ export class DishesService {
     return this.dishRepository.findOne({ where: { id } });
   }
 
-  async update(id: number, updateDishDto: UpdateDishDto) {
-    const isDishExist = await this.dishRepository.findOne({
+  async update(
+    id: number,
+    updateDishDto: UpdateDishDto,
+    fileUpload: FileUpload,
+  ) {
+    const dish = await this.dishRepository.findOne({
       where: { id },
     });
-    if (!isDishExist) {
+    if (!dish) {
       throw new BadRequestException('This dish does not exist');
     }
-    return this.dishRepository.update(id, updateDishDto);
+
+    const uploadImage = new PutObjectCommand({
+      Bucket: this.bucketName,
+      Body: fileUpload.buffer,
+      Key: `dishes/${uuid()}-${fileUpload.filename}`,
+      ContentType: fileUpload.mimetype,
+    });
+
+    const prevFileName = dish.imageUrl.split('dishes/')[1];
+    const removeImage = new DeleteObjectCommand({
+      Bucket: this.bucketName,
+      Key: `dishes/${prevFileName}`,
+    });
+
+    try {
+      await client.send(uploadImage);
+      await client.send(removeImage);
+      return this.dishRepository.save({
+        id,
+        ...updateDishDto,
+        imageUrl: `https://${this.bucketName}.s3.${this.region}.amazonaws.com/${uploadImage.input.Key}`,
+      });
+    } catch (e) {
+      console.log(e);
+    }
   }
 
   async remove(id: number) {
